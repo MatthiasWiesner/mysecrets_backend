@@ -1,5 +1,6 @@
 import os
 import json
+import hashlib
 from flask import Flask, request, Response
 from functools import wraps
 from flask_orator import Orator
@@ -36,25 +37,10 @@ class User(db.Model):
 
 
 class Secret(db.Model):
-    __fillable__ = ['name']
-
-    @belongs_to
-    def category(self):
-        return Category
+    __fillable__ = ['data']
 
     def __repr__(self):
         return '<Secret %r>' % self.name
-
-
-class Category(db.Model):
-    __fillable__ = ['name']
-
-    @has_many
-    def secrets(self):
-        return Secret
-
-    def __repr__(self):
-        return '<Category %r>' % self.name
 
 
 def check_auth(username, password):
@@ -63,7 +49,7 @@ def check_auth(username, password):
     """
     user = User.where('name', '=', username).first()
     if user:
-        return password == user.password
+        return hashlib.sha256(password).hexdigest() == user.password
     return False
 
 
@@ -84,36 +70,21 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
-
 @app.route('/')
 @requires_auth
 def index():
-    u = User.where('name', '=', 'matthias.wiesner').first()
-    return json_response(u.to_json())
+    resp = jsonify(success=True)
+    return resp
 
 
-@app.route('/categories', methods=['GET'])
-@requires_auth
-def get_categories():
-    categories = Category.all()
-    return json_response(categories.to_json())
-
-
-@app.route('/mysecrets', methods=['GET'])
+@app.route('/mysecrets', methods=['GET'], strict_slashes=False)
 @requires_auth
 def get_mysecrets():
-    secrets = Secret.order_by('name').get()
-    for s in secrets:
-        s.category
+    secrets = Secret.all()
     return json_response(secrets.to_json())
 
 
-@app.route('/mysecrets/path/<path>', methods=['GET'])
-def get_mysecrets_by_path(path):
-    pass
-
-
-@app.route('/mysecrets/id/<secret_id>', methods=['GET'])
+@app.route('/mysecrets/<secret_id>', methods=['GET'])
 def get_mysecrets_by_id(secret_id):
     secret = Secret.find(secret_id)
     return json_response(secret.to_json())
@@ -121,38 +92,27 @@ def get_mysecrets_by_id(secret_id):
 
 @app.route('/mysecrets', methods=['POST'])
 def post_mysecret():
-    if 'id' in request.form:
-        secret = Secret.find(request.form['id'])
-    else:
-        secret = Secret()
-
-    secret.category_id = request.form['category_id']
-    if 'category_txt' in request.form and request.form['category_txt']:
-        # neue kategorie anlegen
-        category = Category()
-        category.name = request.form['category_txt']
-        category.save()
-        secret.category_id = category.id
-
-    secret.name = request.form['name']
-    secret.url = request.form['url']
-    secret.credentials = request.form['credentials']
-    try:
-        tags = json.loads(request.form['tags'])
-    except:
-        tags = json.loads('[]')
-
-    secret.tags = json.dumps(tags)
+    secret = Secret()
+    secret.data = request.form['data']
     secret.save()
 
     resp = jsonify(success=True)
     return resp
 
 
-@app.route('/mysecrets/id/<secret_id>', methods=['DELETE'])
+@app.route('/mysecrets/<secret_id>', methods=['PUT'])
+def put_mysecret(secret_id):
+    secret = Secret.find(secret_id)
+    secret.data = request.form['data']
+    secret.save()
+
+    resp = jsonify(success=True)
+    return resp
+
+
+@app.route('/mysecrets/<secret_id>', methods=['DELETE'])
 def delete_mysecret(secret_id):
     Secret.find(secret_id).delete()
-
     resp = jsonify(success=True)
     return resp
 
