@@ -1,5 +1,0 @@
-psycopg2
-flask
-flask-orator
-flask-cors
-pycrypto
