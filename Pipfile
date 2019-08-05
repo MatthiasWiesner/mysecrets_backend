@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-psycopg2 = "==2.8.3"
+psycopg2 = "*"
 flask-orator = "*"
 pycrypto = "*"
 Flask = "*"
@@ -14,4 +14,4 @@ Flask-Cors = "*"
 gunicorn = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3"
