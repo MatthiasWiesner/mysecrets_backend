@@ -49,7 +49,7 @@ def check_auth(username, password):
     """
     user = User.where('name', '=', username).first()
     if user:
-        return hashlib.sha256(password).hexdigest() == user.password
+        return hashlib.sha256(password.encode('utf-8')).hexdigest() == user.password
     return False
 
 
