@@ -16,9 +16,12 @@ grant all privileges on database mysecrets to mysecret;
 ```
 
 Install mysecrets-backend as mysecrets user
-
-pipenv needs to be installed, necessary libs as well
 ```
+git clone git@github.com:MatthiasWiesner/mysecrets_backend.git
+cd mysecrets_backend
+chown -R mysecrets: .
+
+# pipenv (installed with pip3) needs to be installed and the necessary libs as well
 su mysecrets -c '/usr/local/bin/pipenv install'
 su mysecrets -c '/usr/local/bin/pipenv shell'
 
@@ -26,8 +29,8 @@ su mysecrets -c '/usr/local/bin/pipenv shell'
 python db.py migrate
 python db.py db:seed
 
+# as root
 cp ./resources/mysecrets-backend.service /etc/systemd/system/mysecrets-backend.service
-chown -R mysecrets: .
 systemctl daemon reload
 systemctl enable mysecrets-backend.service
 systemctl start mysecrets-backend.service
