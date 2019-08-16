@@ -8,7 +8,6 @@ verify_ssl = true
 [packages]
 psycopg2 = "*"
 flask-orator = "*"
-pycrypto = "*"
 Flask = "*"
 Flask-Cors = "*"
 gunicorn = "*"
